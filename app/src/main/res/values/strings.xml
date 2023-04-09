@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">AdminApp</string>
+    <string name="back_button">Back</string>
+    <string name="student_list">Student List</string>
+    <string name="attendance">Attendance</string>
+    <string name="admin_dashboard">Admin Dashboard</string>
+    <string name="attendance_list">Attendance List</string>
+    <string name="attendance_list_for">"Attendance List for : "</string>
+</resources>
