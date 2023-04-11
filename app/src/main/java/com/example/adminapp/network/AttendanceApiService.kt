@@ -1,9 +1,6 @@
 package com.example.adminapp.network
 
-import com.example.adminapp.model.AttendanceList
-import com.example.adminapp.model.DateList
-import com.example.adminapp.model.Student
-import com.example.adminapp.model.StudentList
+import com.example.adminapp.model.*
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
@@ -12,9 +9,10 @@ import retrofit2.Retrofit
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-//private const val BASE_URL = "https://838586e8ff8128.lhr.life"
-private const val BASE_URL = "https://50b300df385a61.lhr.life"
 //private const val BASE_URL = "http://172.16.164.68:5000"
+//private const val BASE_URL = "http://172.30.176.1:5000"
+//private const val BASE_URL = "  http://192.168.43.111:5000"
+private const val BASE_URL = "  http://192.168.137.1:5000"
 
 @OptIn(ExperimentalSerializationApi::class)
 private val retrofit = Retrofit.Builder()

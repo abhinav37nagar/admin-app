@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
+import java.time.LocalDate
 
 class AdminViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(AdminUiState())
@@ -21,7 +22,7 @@ class AdminViewModel : ViewModel() {
         getStudentList()
         getAttendanceList()
 //        getStudentAttendanceList()
-//        getAttendanceDateList()
+        getAttendanceDateList()
     }
 
     fun getStudentList() {
@@ -106,7 +107,7 @@ class AdminViewModel : ViewModel() {
                 _uiState.update { currentState ->
                     currentState.copy(
                         attendanceDateList = listResult.data,
-                        currentDate = listResult.data[0]
+                        currentDate = listResult.data[0].DATE
                     )
                 }
             } catch (e: IOException) {

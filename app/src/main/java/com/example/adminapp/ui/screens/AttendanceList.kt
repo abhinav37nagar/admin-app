@@ -1,8 +1,8 @@
 package com.example.adminapp.ui.screens
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import android.util.Log
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -20,6 +20,10 @@ import androidx.compose.ui.unit.dp
 import com.example.adminapp.data.AdminUiState
 import com.example.adminapp.model.Attendance
 import kotlinx.serialization.descriptors.StructureKind
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 private fun AttendanceItem(attendance: Attendance, modifier: Modifier = Modifier) {
@@ -40,31 +44,69 @@ private fun AttendanceItemPreview() {
 }
 
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AttendanceList(
     adminUiState: AdminUiState,
     onRefresh: () -> Unit,
+    onChangeDate: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val refreshing by remember { mutableStateOf(false) }
 
     val state = rememberPullRefreshState(refreshing, onRefresh)
 
+    val openDialog = remember { mutableStateOf(false) }
+
 
     Card(modifier = modifier.padding(8.dp), elevation = CardDefaults.cardElevation()) {
+        Button(onClick = { openDialog.value = true }) {
+            Text(
+                "Change Date: "
+//                        + LocalDateTime.parse(adminUiState.currentDate)
+//                    .format(DateTimeFormatter.ofPattern("dd-MMMM-yyyy"))
+            )
+        }
+        if (openDialog.value) {
+
+            AlertDialog(onDismissRequest = { openDialog.value = false }) {
+                Surface(
+                    modifier = Modifier
+                        .wrapContentWidth()
+                        .wrapContentHeight(),
+                    shape = MaterialTheme.shapes.large
+                ) {
+                    LazyColumn() {
+                        items(adminUiState.attendanceDateList) { date ->
+                            ListItem(headlineContent = {
+                                Text(
+                                    date.DATE
+//                                    LocalDateTime.parse(date.DATE)
+//                                        .format(DateTimeFormatter.ofPattern("dd-MMMM-yyyy"))
+                                )
+                            },
+                                modifier = Modifier.clickable {
+                                    openDialog.value = false
+                                    onChangeDate(date.DATE)
+                                })
+                        }
+                    }
+                }
+            }
+        }
 
         Box(Modifier.pullRefresh(state)) {
             LazyColumn(Modifier.fillMaxSize()) {
                 if (!refreshing) {
                     items(adminUiState.attendanceList) { attendance ->
-                        if (attendance.date == adminUiState.currentDate) AttendanceItem(attendance)
+                        if (attendance.date == adminUiState.currentDate) AttendanceItem(
+                            attendance
+                        )
                     }
                 }
             }
             PullRefreshIndicator(refreshing, state, Modifier.align(Alignment.TopCenter))
         }
-
     }
 }
 

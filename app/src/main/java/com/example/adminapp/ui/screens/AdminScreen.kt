@@ -102,7 +102,9 @@ fun AdminApp(
             composable(route = AdminScreen.AttendanceList.name) {
                 AttendanceList(
                     adminUiState = uiState,
-                    onRefresh = { viewModel.getAttendanceList() })
+                    onRefresh = { viewModel.getAttendanceList() },
+                    onChangeDate = { date -> viewModel.setDate(date) }
+                )
             }
             composable(route = AdminScreen.StudentAttendanceList.name) {
                 StudentAttendanceList(
