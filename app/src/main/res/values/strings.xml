@@ -6,4 +6,16 @@
     <string name="admin_dashboard">Admin Dashboard</string>
     <string name="attendance_list">Attendance List</string>
     <string name="attendance_list_for">"Attendance List for : "</string>
+    <string name="register_student">Register Student</string>
+    <!--    <string name="app_name">Student attendance</string>-->
+    <string name="select">Select Item</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="welcome">"Welcome !"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="login_failed">"Login failed"</string>
 </resources>

@@ -11,8 +11,9 @@ import retrofit2.http.Query
 
 //private const val BASE_URL = "http://172.16.164.68:5000"
 //private const val BASE_URL = "http://172.30.176.1:5000"
-//private const val BASE_URL = "  http://192.168.43.111:5000"
-private const val BASE_URL = "  http://192.168.137.1:5000"
+//private const val BASE_URL = "http://192.168.43.111:5000"
+//private const val BASE_URL = "http://192.168.137.1:5000"
+private const val BASE_URL = "https://e52fe6fdb2ea04.lhr.life"
 
 @OptIn(ExperimentalSerializationApi::class)
 private val retrofit = Retrofit.Builder()

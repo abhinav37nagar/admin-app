@@ -1,5 +1,6 @@
 package com.example.adminapp.ui
 
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,7 +13,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
-import java.time.LocalDate
 
 class AdminViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(AdminUiState())
@@ -122,6 +122,14 @@ class AdminViewModel : ViewModel() {
         _uiState.update { currentState ->
             currentState.copy(
                 currentDate = date,
+            )
+        }
+    }
+
+    fun setImage(bmp: Bitmap) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                currentImage = bmp,
             )
         }
     }
