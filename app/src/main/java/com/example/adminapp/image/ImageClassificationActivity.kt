@@ -1,41 +1,38 @@
-package com.example.adminapp.image;
+package com.example.adminapp.image
 
-import android.graphics.Bitmap;
-import android.os.Bundle;
+import android.graphics.Bitmap
+import android.os.Bundle
+import com.example.adminapp.R
+import com.example.adminapp.helpers.MLImageHelperActivity
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.label.ImageLabel
+import com.google.mlkit.vision.label.ImageLabeler
+import com.google.mlkit.vision.label.ImageLabeling
+import com.google.mlkit.vision.label.defaults.ImageLabelerOptions
 
-import com.example.adminapp.helpers.MLImageHelperActivity;
-import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.label.ImageLabel;
-import com.google.mlkit.vision.label.ImageLabeler;
-import com.google.mlkit.vision.label.ImageLabeling;
-import com.google.mlkit.vision.label.defaults.ImageLabelerOptions;
-
-public class ImageClassificationActivity extends MLImageHelperActivity {
-    private ImageLabeler imageLabeler;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        imageLabeler = ImageLabeling.getClient(new ImageLabelerOptions.Builder()
+class ImageClassificationActivity : MLImageHelperActivity() {
+    private var imageLabeler: ImageLabeler? = null
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        imageLabeler = ImageLabeling.getClient(
+            ImageLabelerOptions.Builder()
                 .setConfidenceThreshold(0.7f)
-                .build());
+                .build()
+        )
     }
 
-    @Override
-    protected void runDetection(Bitmap bitmap) {
-        InputImage inputImage = InputImage.fromBitmap(bitmap, 0);
-        imageLabeler.process(inputImage).addOnSuccessListener(imageLabels -> {
-            StringBuilder sb = new StringBuilder();
-            for (ImageLabel label : imageLabels) {
-                sb.append(label.getText()).append(": ").append(label.getConfidence()).append("\n");
+    override fun runDetection(bitmap: Bitmap?) {
+        val inputImage = InputImage.fromBitmap(bitmap!!, 0)
+        imageLabeler!!.process(inputImage).addOnSuccessListener { imageLabels: List<ImageLabel> ->
+            val sb = StringBuilder()
+            for (label in imageLabels) {
+                sb.append(label.text).append(": ").append(label.confidence).append("\n")
             }
             if (imageLabels.isEmpty()) {
-                getOutputTextView().setText("Could not classify!!");
+                outputTextView!!.text = getString(R.string.could_not_classify)
             } else {
-                getOutputTextView().setText(sb.toString());
+                outputTextView!!.text = sb.toString()
             }
-        }).addOnFailureListener(e -> {
-            e.printStackTrace();
-        });
+        }.addOnFailureListener { e: Exception -> e.printStackTrace() }
     }
 }

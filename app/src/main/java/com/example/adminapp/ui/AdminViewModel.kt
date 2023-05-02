@@ -1,6 +1,5 @@
 package com.example.adminapp.ui
 
-import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,6 +22,7 @@ class AdminViewModel : ViewModel() {
         getAttendanceList()
 //        getStudentAttendanceList()
         getAttendanceDateList()
+        getStudentListCopy()
     }
 
     fun getStudentList() {
@@ -126,11 +126,8 @@ class AdminViewModel : ViewModel() {
         }
     }
 
-    fun setImage(bmp: Bitmap) {
-        _uiState.update { currentState ->
-            currentState.copy(
-                currentImage = bmp,
-            )
-        }
+    fun getStudentListCopy() {
+        Log.d("test ui state", _uiState.toString())
+        Log.d("test ui state", uiState.toString())
     }
 }

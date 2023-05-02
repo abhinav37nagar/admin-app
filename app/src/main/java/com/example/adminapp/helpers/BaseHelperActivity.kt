@@ -1,15 +1,11 @@
-package com.example.adminapp.helpers;
+package com.example.adminapp.helpers
 
-import android.os.Bundle;
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-
-public abstract class BaseHelperActivity extends AppCompatActivity {
-
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setTitle(getIntent().getStringExtra("name"));
+abstract class BaseHelperActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        title = intent.getStringExtra("name")
     }
 }

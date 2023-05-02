@@ -1,20 +1,23 @@
-package com.example.adminapp.helpers;
+package com.example.adminapp.helpers
 
-import android.graphics.Rect;
-import android.graphics.RectF;
+import android.graphics.Rect
+import android.graphics.RectF
 
-public class BoxWithText {
-    public String text;
-    public Rect rect;
+class BoxWithText {
+    @JvmField
+    var text: String
 
-    public BoxWithText(String text, Rect rect) {
-        this.text = text;
-        this.rect = rect;
+    @JvmField
+    var rect: Rect
+
+    constructor(text: String, rect: Rect) {
+        this.text = text
+        this.rect = rect
     }
 
-    public BoxWithText(String displayName, RectF boundingBox) {
-        this.text = displayName;
-        this.rect = new Rect();
-        boundingBox.round(rect);
+    constructor(displayName: String, boundingBox: RectF) {
+        text = displayName
+        rect = Rect()
+        boundingBox.round(rect)
     }
 }

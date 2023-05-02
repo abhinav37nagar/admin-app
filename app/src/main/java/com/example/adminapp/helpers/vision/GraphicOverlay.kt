@@ -1,168 +1,135 @@
-package com.example.adminapp.helpers.vision;
+package com.example.adminapp.helpers.vision
 
-import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Rect;
-import android.graphics.RectF;
-import android.util.AttributeSet;
-import android.view.View;
-
-import androidx.camera.core.CameraSelector;
-
-import java.util.ArrayList;
-import java.util.List;
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Rect
+import android.graphics.RectF
+import android.util.AttributeSet
+import android.view.View
+import androidx.camera.core.CameraSelector
 
 /**
  * A view which renders a series of custom graphics to be overlaid on top of an associated preview
  * (i.e., the camera preview). The creator can add graphics objects, update the objects, and remove
  * them, triggering the appropriate drawing and invalidation within the view.
  */
-public class GraphicOverlay extends View {
-    private final Object lock = new Object();
-    private final List<Graphic> graphics = new ArrayList<>();
+class GraphicOverlay(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
+    private val lock = Any()
+    private val graphics: MutableList<Graphic> = ArrayList()
+    var previewWidth = 0
+    var previewHeight = 0
+    var isLensFacingFront = false
 
-    public int previewWidth;
-    public int previewHeight;
-    public boolean isLensFacingFront;
-
-    public GraphicOverlay(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        addOnLayoutChangeListener(
-                (view, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) ->
-                        postInvalidate());
+    init {
+        addOnLayoutChangeListener { view: View?, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int -> postInvalidate() }
     }
 
     /**
      * Removes all graphics from the overlay.
      */
-    public void clear() {
-        synchronized (lock) {
-            graphics.clear();
-        }
-        postInvalidate();
+    fun clear() {
+        synchronized(lock) { graphics.clear() }
+        postInvalidate()
     }
 
     /**
      * Adds a graphic to the overlay.
      */
-    public void add(Graphic graphic) {
-        synchronized (lock) {
-            graphics.add(graphic);
-        }
-        postInvalidate();
+    fun add(graphic: Graphic) {
+        synchronized(lock) { graphics.add(graphic) }
+        postInvalidate()
     }
 
     /**
      * Removes a graphic from the overlay.
      */
-    public void remove(Graphic graphic) {
-        synchronized (lock) {
-            graphics.remove(graphic);
-        }
-        postInvalidate();
+    fun remove(graphic: Graphic) {
+        synchronized(lock) { graphics.remove(graphic) }
+        postInvalidate()
     }
 
     /**
      * Draws the overlay with its associated graphic objects.
      */
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-
-        synchronized (lock) {
-            for (Graphic graphic : graphics) {
-                graphic.draw(canvas);
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        synchronized(lock) {
+            for (graphic in graphics) {
+                graphic.draw(canvas)
             }
         }
     }
 
-    public void setPreviewProperties(int previewWidth, int previewHeight, int lensFacing) {
-        this.previewWidth = previewWidth;
-        this.previewHeight = previewHeight;
-        this.isLensFacingFront = CameraSelector.LENS_FACING_FRONT == lensFacing;
+    fun setPreviewProperties(previewWidth: Int, previewHeight: Int, lensFacing: Int) {
+        this.previewWidth = previewWidth
+        this.previewHeight = previewHeight
+        isLensFacingFront = CameraSelector.LENS_FACING_FRONT == lensFacing
     }
 
     /**
      * Base class for a custom graphics object to be rendered within the graphic overlay. Subclass
-     * this and implement the {@link Graphic#draw(Canvas)} method to define the graphics element. Add
-     * instances to the overlay using {@link GraphicOverlay#add(Graphic)}.
+     * this and implement the [Graphic.draw] method to define the graphics element. Add
+     * instances to the overlay using [GraphicOverlay.add].
      */
-    public abstract static class Graphic {
-
-        private final int imageWidth;
-
-        private final int imageHeight;
-
-        private final GraphicOverlay overlay;
-
-        public Graphic(GraphicOverlay overlay, int width, int height) {
-            this.overlay = overlay;
-            imageWidth = width;
-            imageHeight = height;
-        }
-
+    abstract class Graphic(
+        private val overlay: GraphicOverlay,
+        private val imageWidth: Int,
+        private val imageHeight: Int
+    ) {
         /**
          * Draw the graphic on the supplied canvas. Drawing should use the following methods to convert
          * to view coordinates for the graphics that are drawn:
          *
-         * <ol>
-         *   <li>{@link Graphic#translateX(float)} and {@link Graphic#translateY(float)} adjust the
-         *       coordinate from the image's coordinate system to the view coordinate system.
-         * </ol>
+         *
+         *  1. [Graphic.translateX] and [Graphic.translateY] adjust the
+         * coordinate from the image's coordinate system to the view coordinate system.
+         *
          *
          * @param canvas drawing canvas
          */
-        public abstract void draw(Canvas canvas);
-
-        public RectF transform(Rect rect) {
-            float scaleX = overlay.previewWidth / (float) imageWidth;
-            float scaleY = overlay.previewHeight / (float) imageHeight;
+        abstract fun draw(canvas: Canvas?)
+        fun transform(rect: Rect): RectF {
+            val scaleX = overlay.previewWidth / imageWidth.toFloat()
+            val scaleY = overlay.previewHeight / imageHeight.toFloat()
             // If the front camera lens is being used, reverse the right/left coordinates
-            float flippedLeft;
-            if (overlay.isLensFacingFront)
-                flippedLeft = imageWidth - rect.right;
-            else
-                flippedLeft = rect.left;
-            float flippedRight;
-            if (overlay.isLensFacingFront)
-                flippedRight = imageWidth - rect.left;
-            else
-                flippedRight = rect.right;
+            val flippedLeft: Float =
+                if (overlay.isLensFacingFront) (imageWidth - rect.right).toFloat() else rect.left.toFloat()
+            val flippedRight: Float
+            flippedRight =
+                if (overlay.isLensFacingFront) (imageWidth - rect.left).toFloat() else rect.right.toFloat()
 
             // Scale all coordinates to match preview
-            float scaledLeft = scaleX * flippedLeft;
-            float scaledTop = scaleY * rect.top;
-            float scaledRight = scaleX * flippedRight;
-            float scaledBottom = scaleY * rect.bottom;
-
-            return new RectF(scaledLeft, scaledTop, scaledRight, scaledBottom);
+            val scaledLeft = scaleX * flippedLeft
+            val scaledTop = scaleY * rect.top
+            val scaledRight = scaleX * flippedRight
+            val scaledBottom = scaleY * rect.bottom
+            return RectF(scaledLeft, scaledTop, scaledRight, scaledBottom)
         }
 
         /**
          * Adjusts the x coordinate from the image's coordinate system to the view coordinate system.
          */
-        public float translateX(float x) {
-            float scaleX = overlay.previewWidth / (float) imageWidth;
-
-            float flippedX;
-            if (overlay.isLensFacingFront) {
-                flippedX = imageWidth - x;
+        fun translateX(x: Float): Float {
+            val scaleX = overlay.previewWidth / imageWidth.toFloat()
+            val flippedX: Float
+            flippedX = if (overlay.isLensFacingFront) {
+                imageWidth - x
             } else {
-                flippedX = x;
+                x
             }
-            return flippedX * scaleX;
+            return flippedX * scaleX
         }
 
         /**
          * Adjusts the y coordinate from the image's coordinate system to the view coordinate system.
          */
-        public float translateY(float y) {
-            float scaleY = overlay.previewHeight / (float) imageHeight;
-            return y * scaleY;
+        fun translateY(y: Float): Float {
+            val scaleY = overlay.previewHeight / imageHeight.toFloat()
+            return y * scaleY
         }
 
-        public void postInvalidate() {
-            overlay.postInvalidate();
+        fun postInvalidate() {
+            overlay.postInvalidate()
         }
     }
 }

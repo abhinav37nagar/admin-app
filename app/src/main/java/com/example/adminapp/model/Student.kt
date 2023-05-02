@@ -6,7 +6,8 @@ import kotlinx.serialization.Serializable
 data class Student(
     val adm_no: String,
     val f_name: String,
-    val l_name: String
+    val l_name: String,
+    val face_data: String
 )
 
 @Serializable

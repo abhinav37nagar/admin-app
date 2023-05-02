@@ -1,131 +1,110 @@
-package com.example.adminapp.helpers;
+package com.example.adminapp.helpers
 
-import static androidx.camera.view.PreviewView.StreamState;
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.*
+import android.media.Image
+import android.os.Bundle
+import android.view.Surface
+import android.view.View
+import android.widget.TextView
+import androidx.annotation.OptIn
+import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.*
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Observer
+import com.example.adminapp.R
+import com.example.adminapp.helpers.vision.GraphicOverlay
+import com.example.adminapp.helpers.vision.VisionBaseProcessor
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+import com.google.common.util.concurrent.ListenableFuture
+import java.io.ByteArrayOutputStream
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.ImageFormat;
-import android.graphics.Rect;
-import android.graphics.YuvImage;
-import android.media.Image;
-import android.os.Bundle;
-import android.view.Surface;
-import android.view.View;
-import android.widget.TextView;
+abstract class MLVideoHelperActivity : AppCompatActivity() {
+    private val executor: Executor = Executors.newSingleThreadExecutor()
+    protected var previewView: PreviewView? = null
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.OptIn;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.camera.core.AspectRatio;
-import androidx.camera.core.CameraSelector;
-import androidx.camera.core.ExperimentalGetImage;
-import androidx.camera.core.ImageAnalysis;
-import androidx.camera.core.Preview;
-import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.camera.view.PreviewView;
-import androidx.core.content.ContextCompat;
-import androidx.lifecycle.Observer;
-
-import com.example.adminapp.R;
-import com.example.adminapp.helpers.vision.GraphicOverlay;
-import com.example.adminapp.helpers.vision.VisionBaseProcessor;
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
-import com.google.common.util.concurrent.ListenableFuture;
-
-import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
-public abstract class MLVideoHelperActivity extends AppCompatActivity {
-
-    private static final int REQUEST_CAMERA = 1001;
-    private final Executor executor = Executors.newSingleThreadExecutor();
-    protected PreviewView previewView;
-    protected GraphicOverlay graphicOverlay;
-    private TextView outputTextView;
-    private ExtendedFloatingActionButton addFaceButton;
-    private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
-    private VisionBaseProcessor processor;
-    private ImageAnalysis imageAnalysis;
-
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_video_helper_new);
-
-        previewView = findViewById(R.id.camera_source_preview);
-        graphicOverlay = findViewById(R.id.graphic_overlay);
-        outputTextView = findViewById(R.id.output_text_view);
-        addFaceButton = findViewById(R.id.button_add_face);
-
-        cameraProviderFuture = ProcessCameraProvider.getInstance(getApplicationContext());
-
-        processor = setProcessor();
-
+    @JvmField
+    protected var graphicOverlay: GraphicOverlay? = null
+    private var outputTextView: TextView? = null
+    private var addFaceButton: ExtendedFloatingActionButton? = null
+    private var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>? = null
+    private var processor: VisionBaseProcessor<*>? = null
+    private var imageAnalysis: ImageAnalysis? = null
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_video_helper_new)
+        previewView = findViewById(R.id.camera_source_preview)
+        graphicOverlay = findViewById(R.id.graphic_overlay)
+        outputTextView = findViewById(R.id.output_text_view)
+        addFaceButton = findViewById(R.id.button_add_face)
+        cameraProviderFuture = ProcessCameraProvider.getInstance(applicationContext)
+        processor = setProcessor()
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA);
+            requestPermissions(arrayOf(Manifest.permission.CAMERA), REQUEST_CAMERA)
         } else {
-            initSource();
+            initSource()
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    override fun onDestroy() {
+        super.onDestroy()
         if (processor != null) {
-            processor.stop();
+            processor!!.stop()
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CAMERA && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            initSource();
+            initSource()
         }
     }
 
-    protected void setOutputText(String text) {
-        outputTextView.setText(text);
+    protected fun setOutputText(text: String?) {
+        outputTextView!!.text = text
     }
 
-    private void initSource() {
-
-        cameraProviderFuture.addListener(() -> {
-            try {
-                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
-                bindPreview(cameraProvider);
-            } catch (ExecutionException | InterruptedException e) {
-                // No errors need to be handled for this Future.
-                // This should never be reached.
-            }
-        }, ContextCompat.getMainExecutor(getApplicationContext()));
+    private fun initSource() {
+        cameraProviderFuture!!.addListener(
+            {
+                try {
+                    val cameraProvider = cameraProviderFuture!!.get()
+                    bindPreview(cameraProvider)
+                } catch (e: ExecutionException) {
+                    // No errors need to be handled for this Future.
+                    // This should never be reached.
+                } catch (e: InterruptedException) {
+                }
+            }, ContextCompat.getMainExecutor(
+                applicationContext
+            )
+        )
     }
 
-    void bindPreview(@NonNull ProcessCameraProvider cameraProvider) {
-        int lensFacing = getLensFacing();
-        Preview preview = new Preview.Builder()
-                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                .build();
-        preview.setSurfaceProvider(previewView.getSurfaceProvider());
-
-        CameraSelector cameraSelector = new CameraSelector.Builder()
-                .requireLensFacing(lensFacing)
-                .build();
-
-        imageAnalysis =
-                new ImageAnalysis.Builder()
-                        .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                        .build();
-
-        setFaceDetector(lensFacing);
-        cameraProvider.bindToLifecycle(this, cameraSelector, imageAnalysis, preview);
+    private fun bindPreview(cameraProvider: ProcessCameraProvider) {
+        val lensFacing = lensFacing
+        val preview = Preview.Builder()
+            .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+            .build()
+        preview.setSurfaceProvider(previewView!!.surfaceProvider)
+        val cameraSelector = CameraSelector.Builder()
+            .requireLensFacing(lensFacing)
+            .build()
+        imageAnalysis = ImageAnalysis.Builder()
+            .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+            .build()
+        setFaceDetector(lensFacing)
+        cameraProvider.bindToLifecycle(this, cameraSelector, imageAnalysis, preview)
     }
 
     /**
@@ -133,84 +112,81 @@ public abstract class MLVideoHelperActivity extends AppCompatActivity {
      * preview's width and height, which is guaranteed to be available after the preview starts
      * streaming.
      */
-    private void setFaceDetector(int lensFacing) {
-        previewView.getPreviewStreamState().observe(this, new Observer<StreamState>() {
-            @Override
-            public void onChanged(StreamState streamState) {
-                if (streamState != StreamState.STREAMING) {
-                    return;
+    private fun setFaceDetector(lensFacing: Int) {
+        previewView!!.previewStreamState.observe(this, object : Observer<PreviewView.StreamState?> {
+            override fun onChanged(value: PreviewView.StreamState?) {
+                if (value != PreviewView.StreamState.STREAMING) {
+                    return
                 }
-
-                View preview = previewView.getChildAt(0);
-                float width = preview.getWidth() * preview.getScaleX();
-                float height = preview.getHeight() * preview.getScaleY();
-                float rotation = preview.getDisplay().getRotation();
-                if (rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) {
-                    float temp = width;
-                    width = height;
-                    height = temp;
+                val preview = previewView!!.getChildAt(0)
+                var width = preview.width * preview.scaleX
+                var height = preview.height * preview.scaleY
+                val rotation = preview.display.rotation.toFloat()
+                if (rotation == Surface.ROTATION_90.toFloat() || rotation == Surface.ROTATION_270.toFloat()) {
+                    val temp = width
+                    width = height
+                    height = temp
                 }
-
-                imageAnalysis.setAnalyzer(
-                        executor,
-                        createFaceDetector((int) width, (int) height, lensFacing)
-                );
-                previewView.getPreviewStreamState().removeObserver(this);
+                imageAnalysis!!.setAnalyzer(
+                    executor,
+                    createFaceDetector(width.toInt(), height.toInt(), lensFacing)
+                )
+                previewView!!.previewStreamState.removeObserver(this)
             }
-        });
+        })
     }
 
-    @OptIn(markerClass = ExperimentalGetImage.class)
-    private ImageAnalysis.Analyzer createFaceDetector(int width, int height, int lensFacing) {
-        graphicOverlay.setPreviewProperties(width, height, lensFacing);
-        return imageProxy -> {
-            if (imageProxy.getImage() == null) {
-                imageProxy.close();
-                return;
+    @OptIn(ExperimentalGetImage::class)
+    private fun createFaceDetector(
+        width: Int,
+        height: Int,
+        lensFacing: Int
+    ): ImageAnalysis.Analyzer {
+        graphicOverlay!!.setPreviewProperties(width, height, lensFacing)
+        return ImageAnalysis.Analyzer label@{ imageProxy: ImageProxy ->
+            if (imageProxy.image == null) {
+                imageProxy.close()
+                return@label
             }
-            int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
+            val rotationDegrees = imageProxy.imageInfo.rotationDegrees
             // converting from YUV format
-            processor.detectInImage(imageProxy, toBitmap(imageProxy.getImage()), rotationDegrees);
+            processor!!.detectInImage(imageProxy, toBitmap(imageProxy.image), rotationDegrees)
             // after done, release the ImageProxy object
-            imageProxy.close();
-        };
+            imageProxy.close()
+        }
     }
 
-    private Bitmap toBitmap(Image image) {
-        Image.Plane[] planes = image.getPlanes();
-        ByteBuffer yBuffer = planes[0].getBuffer();
-        ByteBuffer uBuffer = planes[1].getBuffer();
-        ByteBuffer vBuffer = planes[2].getBuffer();
-
-        int ySize = yBuffer.remaining();
-        int uSize = uBuffer.remaining();
-        int vSize = vBuffer.remaining();
-
-        byte[] nv21 = new byte[ySize + uSize + vSize];
+    private fun toBitmap(image: Image?): Bitmap {
+        val planes = image!!.planes
+        val yBuffer = planes[0].buffer
+        val uBuffer = planes[1].buffer
+        val vBuffer = planes[2].buffer
+        val ySize = yBuffer.remaining()
+        val uSize = uBuffer.remaining()
+        val vSize = vBuffer.remaining()
+        val nv21 = ByteArray(ySize + uSize + vSize)
         //U and V are swapped
-        yBuffer.get(nv21, 0, ySize);
-        vBuffer.get(nv21, ySize, vSize);
-        uBuffer.get(nv21, ySize + vSize, uSize);
-
-        YuvImage yuvImage = new YuvImage(nv21, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        yuvImage.compressToJpeg(new Rect(0, 0, yuvImage.getWidth(), yuvImage.getHeight()), 75, out);
-
-        byte[] imageBytes = out.toByteArray();
-        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+        yBuffer[nv21, 0, ySize]
+        vBuffer[nv21, ySize, vSize]
+        uBuffer[nv21, ySize + vSize, uSize]
+        val yuvImage = YuvImage(nv21, ImageFormat.NV21, image.width, image.height, null)
+        val out = ByteArrayOutputStream()
+        yuvImage.compressToJpeg(Rect(0, 0, yuvImage.width, yuvImage.height), 75, out)
+        val imageBytes = out.toByteArray()
+        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
     }
 
-    protected int getLensFacing() {
-        return CameraSelector.LENS_FACING_BACK;
+    private val lensFacing: Int
+        get() = CameraSelector.LENS_FACING_BACK
+
+    protected abstract fun setProcessor(): VisionBaseProcessor<*>?
+    fun makeAddFaceVisible() {
+        addFaceButton!!.visibility = View.VISIBLE
     }
 
-    protected abstract VisionBaseProcessor setProcessor();
+    open fun onAddFaceClicked(view: View?) {}
 
-    public void makeAddFaceVisible() {
-        addFaceButton.setVisibility(View.VISIBLE);
-    }
-
-    public void onAddFaceClicked(View view) {
-
+    companion object {
+        private const val REQUEST_CAMERA = 1001
     }
 }

@@ -1,13 +1,15 @@
-package com.example.adminapp.helpers.vision;
+package com.example.adminapp.helpers.vision
 
-import android.graphics.Bitmap;
+import android.graphics.Bitmap
+import androidx.camera.core.ImageProxy
+import com.google.android.gms.tasks.Task
 
-import androidx.camera.core.ImageProxy;
+abstract class VisionBaseProcessor<T> {
+    abstract fun detectInImage(
+        imageProxy: ImageProxy?,
+        bitmap: Bitmap?,
+        rotationDegrees: Int
+    ): Task<T>?
 
-import com.google.android.gms.tasks.Task;
-
-public abstract class VisionBaseProcessor<T> {
-    public abstract Task<T> detectInImage(ImageProxy imageProxy, Bitmap bitmap, int rotationDegrees);
-
-    public abstract void stop();
+    abstract fun stop()
 }

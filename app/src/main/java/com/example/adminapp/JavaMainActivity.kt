@@ -1,119 +1,105 @@
-package com.example.adminapp;
+package com.example.adminapp
 
-import android.app.Activity;
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.app.Activity
+import android.content.Intent
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.adminapp.image.ImageClassificationActivity
+import com.example.adminapp.`object`.FaceRecognitionActivity
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.example.adminapp.image.ImageClassificationActivity;
-import com.example.adminapp.object.FaceRecognitionActivity;
-
-import java.util.ArrayList;
-import java.util.List;
-
-interface AlgoListener {
-    void onAlgoSelected(Algo algo);
+internal interface AlgoListener {
+    fun onAlgoSelected(algo: Algo<*>?)
 }
 
-public class JavaMainActivity extends Activity implements AlgoListener {
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        ArrayList<Algo> arrayList = new ArrayList<>(1);
-
-        arrayList.add(new Algo(R.drawable.baseline_portrait_black_48, "Face recognition", FaceRecognitionActivity.class));
-
-        AlgoAdapter algoAdapter = new AlgoAdapter(arrayList, this);
-        RecyclerView recyclerView = findViewById(R.id.main_recycler_view);
-        recyclerView.setAdapter(algoAdapter);
-        recyclerView.setLayoutManager(new GridLayoutManager(this, 1));
+class JavaMainActivity : Activity(), AlgoListener {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        val arrayList = ArrayList<Algo<*>>(1)
+        arrayList.add(
+            Algo<ImageClassificationActivity?>(
+                R.drawable.baseline_portrait_black_48,
+                "Face recognition",
+                FaceRecognitionActivity::class.java
+            )
+        )
+        val algoAdapter = AlgoAdapter(arrayList, this)
+        val recyclerView: RecyclerView = findViewById<RecyclerView>(R.id.main_recycler_view)
+        recyclerView.adapter = algoAdapter
+        recyclerView.layoutManager = GridLayoutManager(this, 1)
     }
 
-    @Override
-    public void onAlgoSelected(Algo algo) {
-        Intent intent = new Intent(this, algo.activityClazz);
-        intent.putExtra("name", algo.algoText);
-        startActivity(intent);
-    }
-}
-
-class AlgoAdapter extends RecyclerView.Adapter<AlgoViewHolder> {
-
-    private final List<Algo> algoList;
-    private final AlgoListener algoListener;
-
-    public AlgoAdapter(List<Algo> algoList, AlgoListener listener) {
-        this.algoList = algoList;
-        this.algoListener = listener;
-    }
-
-    @NonNull
-    @Override
-    public AlgoViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_icons, parent, false);
-        return new AlgoViewHolder(view, algoListener);
-    }
-
-    @Override
-    public void onBindViewHolder(@NonNull AlgoViewHolder holder, int position) {
-        holder.bind(algoList.get(position));
-    }
-
-    @Override
-    public int getItemCount() {
-        return algoList.size();
-    }
-}
-
-class AlgoViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-
-    private final ImageView iconImageView;
-    private final TextView algoTextView;
-    private final AlgoListener algoListener;
-    private Algo algo;
-
-    public AlgoViewHolder(@NonNull View itemView, AlgoListener algoListener) {
-        super(itemView);
-        itemView.setOnClickListener(this);
-        this.algoListener = algoListener;
-
-        iconImageView = itemView.findViewById(R.id.iconImageView);
-        algoTextView = itemView.findViewById(R.id.algoTextView);
-    }
-
-    public void bind(Algo algo) {
-        this.algo = algo;
-        iconImageView.setImageResource(algo.iconResourceId);
-        algoTextView.setText(algo.algoText);
-    }
-
-    @Override
-    public void onClick(View v) {
-        if (algoListener != null) {
-            algoListener.onAlgoSelected(algo);
+    override fun onAlgoSelected(algo: Algo<*>?) {
+        if (algo != null) {
+            val intent = Intent(this, algo.activityClazz)
+            intent.putExtra("name", algo.algoText)
+            startActivity(intent)
         }
     }
 }
 
-class Algo<T extends ImageClassificationActivity> {
-    public int iconResourceId = R.drawable.ic_launcher_foreground;
-    public String algoText = "";
-    public Class<T> activityClazz;
+internal class AlgoAdapter(
+    private val algoList: List<Algo<*>>,
+    private val algoListener: AlgoListener
+) : RecyclerView.Adapter<AlgoViewHolder?>() {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AlgoViewHolder {
+        val view: View =
+            LayoutInflater.from(parent.context).inflate(R.layout.item_icons, parent, false)
+        return AlgoViewHolder(view, algoListener)
+    }
 
-    public Algo(int iconResourceId, String algoText, Class<T> activityClazz) {
-        this.iconResourceId = iconResourceId;
-        this.algoText = algoText;
-        this.activityClazz = activityClazz;
+    override fun onBindViewHolder(holder: AlgoViewHolder, position: Int) {
+        holder.bind(algoList[position])
+    }
+
+    override fun getItemCount(): Int {
+        return algoList.size
+    }
+}
+
+internal class AlgoViewHolder(itemView: View, algoListener: AlgoListener?) :
+    RecyclerView.ViewHolder(itemView), View.OnClickListener {
+    private val iconImageView: ImageView
+    private val algoTextView: TextView
+    private val algoListener: AlgoListener?
+    private var algo: Algo<*>? = null
+
+    init {
+        itemView.setOnClickListener(this)
+        this.algoListener = algoListener
+        iconImageView = itemView.findViewById(R.id.iconImageView)
+        algoTextView = itemView.findViewById(R.id.algoTextView)
+    }
+
+    fun bind(algo: Algo<*>) {
+        this.algo = algo
+        iconImageView.setImageResource(algo.iconResourceId)
+        algoTextView.text = algo.algoText
+    }
+
+    override fun onClick(v: View) {
+        algoListener?.onAlgoSelected(algo)
+    }
+}
+
+class Algo<T : ImageClassificationActivity?>(
+    iconResourceId: Int,
+    algoText: String,
+    activityClazz: Class<FaceRecognitionActivity>
+) {
+    var iconResourceId = R.drawable.ic_launcher_foreground
+    var algoText = ""
+    var activityClazz: Class<FaceRecognitionActivity>
+
+    init {
+        this.iconResourceId = iconResourceId
+        this.algoText = algoText
+        this.activityClazz = activityClazz
     }
 }

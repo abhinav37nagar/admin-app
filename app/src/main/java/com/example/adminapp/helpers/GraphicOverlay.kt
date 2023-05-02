@@ -1,38 +1,30 @@
-package com.example.adminapp.helpers;
+package com.example.adminapp.helpers
 
-import android.content.Context;
-import android.graphics.Canvas;
-import android.util.AttributeSet;
-import android.view.View;
+import android.content.Context
+import android.graphics.Canvas
+import android.util.AttributeSet
+import android.view.View
+import com.example.adminapp.helpers.vision.GraphicOverlay.Graphic
 
-import androidx.annotation.Nullable;
+class GraphicOverlay : View {
+    constructor(context: Context?) : super(context)
+    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
+    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
+        context,
+        attrs,
+        defStyleAttr
+    )
 
-public class GraphicOverlay extends View {
+    constructor(
+        context: Context?,
+        attrs: AttributeSet?,
+        defStyleAttr: Int,
+        defStyleRes: Int
+    ) : super(context, attrs, defStyleAttr, defStyleRes)
 
-    public GraphicOverlay(Context context) {
-        super(context);
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
     }
 
-    public GraphicOverlay(Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
-    }
-
-    public GraphicOverlay(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-    }
-
-    public GraphicOverlay(Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
-    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-
-
-    }
-
-    public void addGraphics(com.example.adminapp.helpers.vision.GraphicOverlay.Graphic graphic) {
-
-    }
+    fun addGraphics(graphic: Graphic?) {}
 }
