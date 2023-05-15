@@ -12,5 +12,6 @@ data class AdminUiState(
     val attendanceList: List<Attendance> = listOf(),
     val studentAttendanceList: List<Attendance> = listOf(),
     val attendanceDateList: List<DateItem> = listOf(),
-    val currentStudent: String = ""
+    val currentStudent: String = "",
+    val token: String = ""
 )
